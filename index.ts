@@ -17,6 +17,15 @@ const client = new Client({
 client.once("ready", async (bot) => {
     console.log(`[CLIENT] Logged in as ${bot.user.tag}`);
 
+    if (!config.smp.ip) {
+        console.warn("IP address is empty");
+        process.exit(0);
+    }
+    if (!config.status.channel) {
+        console.warn("Status channel is empty");
+        process.exit(0);
+    }
+
     const statusTimer = setInterval(
         UpdateMessage,
         config.status.updateInterval * 1000
@@ -29,7 +38,14 @@ let last_server_status = "";
 async function UpdateMessage() {
     const statusChannel = client.channels.cache.get(config.status.channel);
 
-    if (!statusChannel || statusChannel.type !== ChannelType.GuildText) return;
+    if (!statusChannel) {
+        console.error("Status channel not found");
+        process.exit(0);
+    }
+    if (statusChannel.type !== ChannelType.GuildText) {
+        console.error("Channel is not GuildText");
+        process.exit(0);
+    }
 
     let statusMessage = (
         await statusChannel.messages
@@ -43,7 +59,7 @@ async function UpdateMessage() {
 
     if (statusMessage === undefined) {
         statusMessage = await statusChannel.send({
-            embeds: [new EmbedBuilder().setDescription("Initial message.")],
+            embeds: [new EmbedBuilder().setDescription("Initial message")],
         });
     }
 

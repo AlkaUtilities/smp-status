@@ -1,11 +1,11 @@
 export default {
     smp: {
-        ip: "",
-        port: 0,
+        ip: "indihomeSMP.aternos.me",
+        port: 36341,
     },
 
     status: {
-        channel: "", // channel id
+        channel: "1061254275331784764", // channel id
         updateInterval: 60, // in seconds
     },
 
