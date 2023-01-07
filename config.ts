@@ -1,4 +1,6 @@
 export default {
+    port: 8080,
+
     smp: {
         ip: "indihomeSMP.aternos.me",
         port: 36341,
@@ -6,7 +8,7 @@ export default {
 
     status: {
         channel: "1061254275331784764", // channel id
-        updateInterval: 60, // in seconds
+        updateInterval: 5, // in seconds
     },
 
     icons: {

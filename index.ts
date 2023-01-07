@@ -1,10 +1,13 @@
 import { Client, IntentsBitField, ChannelType, EmbedBuilder } from "discord.js";
 import { status as ServerStatus } from "minecraft-server-util";
 import { config as loadenv } from "dotenv";
+import express from "express";
 import config from "./config";
 import {} from "./typings/enviroment";
 
 loadenv();
+
+const app = express();
 
 const client = new Client({
     intents: [
@@ -13,6 +16,8 @@ const client = new Client({
         IntentsBitField.Flags.Guilds,
     ],
 });
+
+app.get("/", (req, res) => res.sendStatus(200));
 
 client.once("ready", async (bot) => {
     console.log(`[CLIENT] Logged in as ${bot.user.tag}`);
@@ -110,13 +115,13 @@ async function UpdateMessage() {
             content: "",
             embeds: [
                 new EmbedBuilder()
-                    .setAuthor({
-                        iconURL: config.icons.author,
-                        name:
-                            !config.smp.port || config.smp.port === 25565
-                                ? `${config.smp.ip}`
-                                : `${config.smp.ip}:${config.smp.port}`,
-                    })
+                    // .setAuthor({
+                    //     iconURL: config.icons.author,
+                    //     name:
+                    //         !config.smp.port || config.smp.port === 25565
+                    //             ? `${config.smp.ip}`
+                    //             : `${config.smp.ip}:${config.smp.port}`,
+                    // })
                     .setTimestamp()
                     .setTitle("Unreachable")
                     .setThumbnail(config.icons.unreachable)
@@ -143,13 +148,13 @@ async function BuildEmbed(
     }
 ) {
     const embed = new EmbedBuilder()
-        .setAuthor({
-            iconURL: config.icons.author,
-            name:
-                !config.smp.port || config.smp.port === 25565
-                    ? `${config.smp.ip}`
-                    : `${config.smp.ip}:${config.smp.port}`,
-        })
+        // .setAuthor({
+        //     iconURL: config.icons.author,
+        //     name:
+        //         !config.smp.port || config.smp.port === 25565
+        //             ? `${config.smp.ip}`
+        //             : `${config.smp.ip}:${config.smp.port}`,
+        // })
         .setTimestamp();
 
     if (status === "offline") {
@@ -219,3 +224,6 @@ function capitalize(str: string) {
 }
 
 client.login(process.env.TOKEN);
+app.listen(config.port, () =>
+    console.log(`[EXPRESS] Listening on port ${config.port}`)
+);
