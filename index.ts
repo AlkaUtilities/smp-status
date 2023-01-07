@@ -1,11 +1,11 @@
 import { Client, IntentsBitField, ChannelType, EmbedBuilder } from "discord.js";
 import { status as ServerStatus } from "minecraft-server-util";
-import { config as loadenv } from "dotenv";
+// import { config as loadenv } from "dotenv";
 import express from "express";
 import config from "./config";
-import {} from "./typings/enviroment";
+import { } from "./typings/enviroment";
 
-loadenv();
+// loadenv();
 
 const app = express();
 
@@ -38,7 +38,7 @@ client.once("ready", async (bot) => {
 });
 
 let status = "unreachable";
-let last_server_status = "";
+let last_server_status = "unknown";
 
 async function UpdateMessage() {
     const statusChannel = client.channels.cache.get(config.status.channel);
@@ -69,10 +69,24 @@ async function UpdateMessage() {
     }
 
     try {
-        let { version, players } = await ServerStatus(
+        let version: any = {
+            name: "",
+            protocol: 0,
+        };
+
+        let players: any = {
+            online: 0,
+            max: 0,
+            sample: null
+        }
+
+        await ServerStatus(
             config.smp.ip,
             config.smp.port || 25565
-        );
+        ).then((res) => {
+            version = res.version;
+            players = res.players;
+        });
 
         /**
          * if connection refused (happens when server is starting)
@@ -102,7 +116,7 @@ async function UpdateMessage() {
             status = "online";
         }
 
-        if (last_server_status !== status) {
+        if (last_server_status !== status || status === "online") {
             last_server_status = status;
             await statusMessage.edit({
                 content: "",
@@ -110,6 +124,7 @@ async function UpdateMessage() {
             });
         }
     } catch (err) {
+        // console.log(err);
         status = "unreachable";
         await statusMessage.edit({
             content: "",
@@ -220,10 +235,10 @@ async function BuildEmbed(
 }
 
 function capitalize(str: string) {
-    return str[0].toUpperCase() + str.substring(1);
+    return str[0]?.toUpperCase() + str?.substring(1);
 }
 
-client.login(process.env.TOKEN);
+client.login(process.env["TOKEN"]);
 app.listen(config.port, () =>
     console.log(`[EXPRESS] Listening on port ${config.port}`)
 );

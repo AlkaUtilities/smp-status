@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../typings/enviroment.d.ts"],
+  "sourcesContent": ["declare global {\n    namespace NodeJS {\n        interface ProcessEnv {\n            TOKEN: string;\n        }\n    }\n}\n\nexport {};\n"],
+  "mappings": ";;;;;;;;;;;;;;AAAA;AAAA;",
+  "names": []
+}
