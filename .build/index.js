@@ -25,7 +25,6 @@ const app = (0, import_express.default)();
 const client = new import_discord.Client({
   intents: [
     import_discord.IntentsBitField.Flags.GuildMessages,
-    import_discord.IntentsBitField.Flags.GuildPresences,
     import_discord.IntentsBitField.Flags.Guilds
   ]
 });
@@ -98,7 +97,6 @@ async function UpdateMessage() {
       });
     }
   } catch (err) {
-    console.log(err);
     status = "unreachable";
     await statusMessage.edit({
       content: "",

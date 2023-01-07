@@ -12,7 +12,6 @@ const app = express();
 const client = new Client({
     intents: [
         IntentsBitField.Flags.GuildMessages,
-        IntentsBitField.Flags.GuildPresences,
         IntentsBitField.Flags.Guilds,
     ],
 });
