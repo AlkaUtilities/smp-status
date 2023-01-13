@@ -84,8 +84,9 @@ async function UpdateMessage() {
             (res) => {
                 version = res.version;
                 players = res.players;
+                const date = new Date();
                 console.log(
-                    `[${config.smp.ip.replace(
+                    `[${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}] [${config.smp.ip.replace(
                         ".aternos.me",
                         ""
                     )}]    [status]  ${res.version.name} ${
@@ -123,8 +124,9 @@ async function UpdateMessage() {
             status = "online";
         }
 
+        const date = new Date();
         console.log(
-            `[${config.smp.ip.replace(
+            `[${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}] [${config.smp.ip.replace(
                 ".aternos.me",
                 ""
             )}]    [compare] last: ${last_server_status} | current: ${status} | ${
@@ -141,8 +143,12 @@ async function UpdateMessage() {
             });
         }
     } catch (err) {
+        const date = new Date();
         console.log(
-            `[${config.smp.ip.replace(".aternos.me", "")}] [status-err] ${err}`
+            `[${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}] [${config.smp.ip.replace(
+                ".aternos.me",
+                ""
+            )}] [status-err] ${err}`
         );
         status = "unreachable";
         await statusMessage.edit({
