@@ -21,6 +21,7 @@ var import_discord = require("discord.js");
 var import_minecraft_server_util = require("minecraft-server-util");
 var import_express = __toESM(require("express"));
 var import_config = __toESM(require("./config"));
+const TOKEN = process.env["TOKEN"];
 const app = (0, import_express.default)();
 const client = new import_discord.Client({
   intents: [
@@ -39,11 +40,9 @@ client.once("ready", async (bot) => {
     console.warn("Status channel is empty");
     process.exit(0);
   }
-  const statusTimer = setInterval(
-    UpdateMessage,
-    import_config.default.status.updateInterval * 1e3
-  );
+  UpdateMessage();
 });
+client.login(process.env["TOKEN"]);
 let status = "unreachable";
 let last_server_status = "unknown";
 async function UpdateMessage() {
@@ -83,12 +82,14 @@ async function UpdateMessage() {
     ).then((res) => {
       version = res.version;
       players = res.players;
+      console.log(`[${import_config.default.smp.ip.replace(".aternos.me", "")}]    [status]  ${res.version.name} ${res.players.online}/${res.players.max}`);
     });
     if (version.protocol === 46) {
       status = version.name.slice(4).replace(/\./g, "").toLowerCase();
     } else if (version.protocol === 760) {
       status = "online";
     }
+    console.log(`[${import_config.default.smp.ip.replace(".aternos.me", "")}]    [compare] last: ${last_server_status} | current: ${status} | ${last_server_status !== status || status === "online" ? "true" : "false"}`);
     if (last_server_status !== status || status === "online") {
       last_server_status = status;
       await statusMessage.edit({
@@ -97,6 +98,7 @@ async function UpdateMessage() {
       });
     }
   } catch (err) {
+    console.log(`[${import_config.default.smp.ip.replace(".aternos.me", "")}] [status-err] ${err}`);
     status = "unreachable";
     await statusMessage.edit({
       content: "",
@@ -113,6 +115,8 @@ async function UpdateMessage() {
       ]
     });
   }
+  await sleep(import_config.default.status.updateInterval * 1e3);
+  UpdateMessage();
 }
 async function BuildEmbed(version, players) {
   const embed = new import_discord.EmbedBuilder().setTimestamp();
@@ -165,9 +169,11 @@ function capitalize(str) {
   var _a;
   return ((_a = str[0]) == null ? void 0 : _a.toUpperCase()) + (str == null ? void 0 : str.substring(1));
 }
-client.login(process.env["TOKEN"]);
 app.listen(
   import_config.default.port,
   () => console.log(`[EXPRESS] Listening on port ${import_config.default.port}`)
 );
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 //# sourceMappingURL=index.js.map

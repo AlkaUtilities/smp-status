@@ -5,6 +5,8 @@ import express from "express";
 import config from "./config";
 import { } from "./typings/enviroment";
 
+const TOKEN = process.env['TOKEN']
+
 // loadenv();
 
 const app = express();
@@ -30,11 +32,10 @@ client.once("ready", async (bot) => {
         process.exit(0);
     }
 
-    const statusTimer = setInterval(
-        UpdateMessage,
-        config.status.updateInterval * 1000
-    );
+    UpdateMessage();
 });
+
+client.login(process.env["TOKEN"])
 
 let status = "unreachable";
 let last_server_status = "unknown";
@@ -85,16 +86,17 @@ async function UpdateMessage() {
         ).then((res) => {
             version = res.version;
             players = res.players;
+            console.log(`[${config.smp.ip.replace(".aternos.me", "")}]    [status]  ${res.version.name} ${res.players.online}/${res.players.max}`)
         });
 
         /**
-         * if connection refused (happens when server is starting)
-         * display "connecton refused. last status: ${last_status}"
-         * to give the users a hint on why the server is unreachable
-         *
-         *  online version protocol: 760
-         *  other  version protocol: 46
-         */
+        * if connection refused (happens when server is starting)
+        * display "connecton refused. last status: ${last_status}"
+        * to give the users a hint on why the server is unreachable
+        *
+        *  online version protocol: 760
+        *  other  version protocol: 46
+        */
 
         // using else if
         // if (version.name === "§4● Offline" && version.protocol === 46) {
@@ -115,6 +117,7 @@ async function UpdateMessage() {
             status = "online";
         }
 
+        console.log(`[${config.smp.ip.replace(".aternos.me", "")}]    [compare] last: ${last_server_status} | current: ${status} | ${last_server_status !== status || status === "online" ? 'true' : 'false'}`);
         if (last_server_status !== status || status === "online") {
             last_server_status = status;
             await statusMessage.edit({
@@ -123,7 +126,7 @@ async function UpdateMessage() {
             });
         }
     } catch (err) {
-        // console.log(err);
+        console.log(`[${config.smp.ip.replace(".aternos.me", "")}] [status-err] ${err}`);
         status = "unreachable";
         await statusMessage.edit({
             content: "",
@@ -151,6 +154,9 @@ async function UpdateMessage() {
             ],
         });
     }
+
+    await sleep(config.status.updateInterval * 1000);
+    UpdateMessage();
 }
 
 async function BuildEmbed(
@@ -237,7 +243,10 @@ function capitalize(str: string) {
     return str[0]?.toUpperCase() + str?.substring(1);
 }
 
-client.login(process.env["TOKEN"]);
 app.listen(config.port, () =>
     console.log(`[EXPRESS] Listening on port ${config.port}`)
 );
+
+function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
