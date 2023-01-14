@@ -23,6 +23,7 @@ __export(config_exports, {
 module.exports = __toCommonJS(config_exports);
 var config_default = {
   port: 8080,
+  debug: true,
   smp: {
     ip: "indihomeSMP.aternos.me",
     port: 36341

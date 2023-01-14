@@ -21,7 +21,10 @@ var import_discord = require("discord.js");
 var import_minecraft_server_util = require("minecraft-server-util");
 var import_express = __toESM(require("express"));
 var import_config = __toESM(require("./config"));
-const TOKEN = process.env["TOKEN"];
+var import_dotenv = require("dotenv");
+//! Disable in replit
+(0, import_dotenv.config)();
+console.log(`[CONFIG] ip: ${import_config.default.smp.ip} | port: ${import_config.default.smp.port}`);
 const app = (0, import_express.default)();
 const client = new import_discord.Client({
   intents: [
@@ -29,7 +32,11 @@ const client = new import_discord.Client({
     import_discord.IntentsBitField.Flags.Guilds
   ]
 });
-app.get("/", (req, res) => res.sendStatus(200));
+app.get("/", (req, res) => {
+  if (client.user === null)
+    return res.sendStatus(500);
+  res.sendStatus(200);
+});
 client.once("ready", async (bot) => {
   console.log(`[CLIENT] Logged in as ${bot.user.tag}`);
   if (!import_config.default.smp.ip) {
@@ -76,44 +83,121 @@ async function UpdateMessage() {
       max: 0,
       sample: null
     };
-    await (0, import_minecraft_server_util.status)(
-      import_config.default.smp.ip,
-      import_config.default.smp.port || 25565
-    ).then((res) => {
-      version = res.version;
-      players = res.players;
-      console.log(`[${import_config.default.smp.ip.replace(".aternos.me", "")}]    [status]  ${res.version.name} ${res.players.online}/${res.players.max}`);
-    });
+    await (0, import_minecraft_server_util.status)(import_config.default.smp.ip, import_config.default.smp.port || 25565).then(
+      (res) => {
+        version = res.version;
+        players = res.players;
+        const date = new Date();
+        if (import_config.default.debug) {
+          console.log(
+            `[${padWithLeadingZeros(
+              date.getHours(),
+              2
+            )}:${padWithLeadingZeros(
+              date.getMinutes(),
+              2
+            )}:${padWithLeadingZeros(
+              date.getSeconds(),
+              2
+            )}] [status]     ${res.version.name} ${res.players.online}/${res.players.max}`
+          );
+        }
+      }
+    );
     if (version.protocol === 46) {
       status = version.name.slice(4).replace(/\./g, "").toLowerCase();
     } else if (version.protocol === 760) {
       status = "online";
     }
-    console.log(`[${import_config.default.smp.ip.replace(".aternos.me", "")}]    [compare] last: ${last_server_status} | current: ${status} | ${last_server_status !== status || status === "online" ? "true" : "false"}`);
-    if (last_server_status !== status || status === "online") {
+    if (import_config.default.debug) {
+      const date = new Date();
+      console.log(
+        `[${padWithLeadingZeros(
+          date.getHours(),
+          2
+        )}:${padWithLeadingZeros(
+          date.getMinutes(),
+          2
+        )}:${padWithLeadingZeros(
+          date.getSeconds(),
+          2
+        )}] [comparison] last: ${last_server_status} | current: ${status} | ${last_server_status !== status || status === "online" ? "true" : "false"}`
+      );
+    }
+    if (last_server_status !== status) {
+      if (import_config.default.debug) {
+        const date = new Date();
+        console.log(
+          `[${padWithLeadingZeros(
+            date.getHours(),
+            2
+          )}:${padWithLeadingZeros(
+            date.getMinutes(),
+            2
+          )}:${padWithLeadingZeros(
+            date.getSeconds(),
+            2
+          )}] [msg-embed]  Updated message embed. from: ${last_server_status} | to: ${status}`
+        );
+      }
       last_server_status = status;
       await statusMessage.edit({
         content: "",
         embeds: [await BuildEmbed(version, players)]
       });
+      UpdateStatus();
     }
   } catch (err) {
-    console.log(`[${import_config.default.smp.ip.replace(".aternos.me", "")}] [status-err] ${err}`);
     status = "unreachable";
-    await statusMessage.edit({
-      content: "",
-      embeds: [
-        new import_discord.EmbedBuilder().setTimestamp().setTitle("Unreachable").setThumbnail(import_config.default.icons.unreachable).setColor(`#${import_config.default.colors.unreachable}`).setDescription(
-          [
-            `The server is currently unreachable`,
-            `The server might currently be starting/stopping`,
-            `Last status: ${capitalize(last_server_status)}
-`,
-            `IP Address: \`${import_config.default.smp.ip}:${import_config.default.smp.port}\``
-          ].join("\n")
-        )
-      ]
-    });
+    if (import_config.default.debug) {
+      const date = new Date();
+      console.log(
+        `[${padWithLeadingZeros(
+          date.getHours(),
+          2
+        )}:${padWithLeadingZeros(
+          date.getMinutes(),
+          2
+        )}:${padWithLeadingZeros(
+          date.getSeconds(),
+          2
+        )}] [status-err] ${err}`
+      );
+    }
+    if (last_server_status !== status) {
+      if (import_config.default.debug) {
+        const date = new Date();
+        console.log(
+          `[${padWithLeadingZeros(
+            date.getHours(),
+            2
+          )}:${padWithLeadingZeros(
+            date.getMinutes(),
+            2
+          )}:${padWithLeadingZeros(
+            date.getSeconds(),
+            2
+          )}] [msg-embed]  Updated message embed. from: ${last_server_status} | to: ${status}`
+        );
+      }
+      last_server_status = status;
+      await statusMessage.edit({
+        content: "",
+        embeds: [
+          new import_discord.EmbedBuilder().setTimestamp().setTitle("Unreachable").setThumbnail(import_config.default.icons.unreachable).setColor(`#${import_config.default.colors.unreachable}`).setDescription(
+            [
+              `The server is currently unreachable`,
+              `The server might currently be starting/stopping`,
+              `Last status: ${capitalize(last_server_status)}`,
+              `IP Address: \`${import_config.default.smp.ip}:${import_config.default.smp.port}\``,
+              `
+\`${err}\``
+            ].join("\n")
+          )
+        ]
+      });
+      UpdateStatus();
+    }
   }
   await sleep(import_config.default.status.updateInterval * 1e3);
   UpdateMessage();
@@ -150,8 +234,7 @@ async function BuildEmbed(version, players) {
         `The server is currently online
 `,
         `IP Address: \`${import_config.default.smp.ip}:${import_config.default.smp.port}\``,
-        `Version: ${version.name}`,
-        `Players: ${players.online}/${players.max} online`
+        `Version: ${version.name}`
       ].join("\n")
     );
   } else if (status === "saving") {
@@ -165,6 +248,24 @@ async function BuildEmbed(version, players) {
   }
   return embed;
 }
+function UpdateStatus() {
+  var _a, _b;
+  if (status === "online") {
+    (_a = client.user) == null ? void 0 : _a.setPresence({
+      status: "online",
+      activities: [
+        {
+          name: import_config.default.smp.port ? `${import_config.default.smp.ip}:${import_config.default.smp.port}` : `${import_config.default.smp.ip}`,
+          type: import_discord.ActivityType.Playing
+        }
+      ]
+    });
+  } else {
+    (_b = client.user) == null ? void 0 : _b.setPresence({
+      status: "dnd"
+    });
+  }
+}
 function capitalize(str) {
   var _a;
   return ((_a = str[0]) == null ? void 0 : _a.toUpperCase()) + (str == null ? void 0 : str.substring(1));
@@ -175,5 +276,8 @@ app.listen(
 );
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+function padWithLeadingZeros(num, totalLength) {
+  return String(num).padStart(totalLength, "0");
 }
 //# sourceMappingURL=index.js.map

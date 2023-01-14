@@ -8,11 +8,10 @@ import {
 import { status as ServerStatus } from "minecraft-server-util";
 import express from "express";
 import config from "./config";
-import {} from "./typings/enviroment";
+import { } from "./typings/enviroment";
 
-//! Disable in replit
-import { config as loadenv } from "dotenv";
-loadenv();
+// import { config as loadenv } from "dotenv";
+// loadenv();
 
 console.log(`[CONFIG] ip: ${config.smp.ip} | port: ${config.smp.port}`);
 
@@ -107,8 +106,7 @@ async function UpdateMessage() {
                         )}:${padWithLeadingZeros(
                             date.getSeconds(),
                             2
-                        )}] [status]     ${res.version.name} ${
-                            res.players.online
+                        )}] [status]     ${res.version.name} ${res.players.online
                         }/${res.players.max}`
                     );
                 }
@@ -155,16 +153,15 @@ async function UpdateMessage() {
                 )}:${padWithLeadingZeros(
                     date.getSeconds(),
                     2
-                )}] [comparison] last: ${last_server_status} | current: ${status} | ${
-                    last_server_status !== status || status === "online"
-                        ? "true"
-                        : "false"
+                )}] [comparison] last: ${last_server_status} | current: ${status} | ${last_server_status !== status || status === "online"
+                    ? "true"
+                    : "false"
                 }`
             );
         }
         if (last_server_status !== status) {
-            const date = new Date();
             if (config.debug) {
+                const date = new Date();
                 console.log(
                     `[${padWithLeadingZeros(
                         date.getHours(),
@@ -184,9 +181,10 @@ async function UpdateMessage() {
                 embeds: [await BuildEmbed(version, players)],
             });
 
-            await UpdateStatus();
+            UpdateStatus();
         }
     } catch (err) {
+        status = "unreachable"
         if (config.debug) {
             const date = new Date();
             console.log(
@@ -202,26 +200,45 @@ async function UpdateMessage() {
                 )}] [status-err] ${err}`
             );
         }
-        status = "unreachable";
-        await statusMessage.edit({
-            content: "",
-            embeds: [
-                new EmbedBuilder()
-                    .setTimestamp()
-                    .setTitle("Unreachable")
-                    .setThumbnail(config.icons.unreachable)
-                    .setColor(`#${config.colors.unreachable}`)
-                    .setDescription(
-                        [
-                            `The server is currently unreachable`,
-                            `The server might currently be starting/stopping`,
-                            `Last status: ${capitalize(last_server_status)}\n`,
-                            `IP Address: \`${config.smp.ip}:${config.smp.port}\``,
-                            `\n\`${err}\``,
-                        ].join("\n")
-                    ),
-            ],
-        });
+        if (last_server_status !== status) {
+            if (config.debug) {
+                const date = new Date();
+                console.log(
+                    `[${padWithLeadingZeros(
+                        date.getHours(),
+                        2
+                    )}:${padWithLeadingZeros(
+                        date.getMinutes(),
+                        2
+                    )}:${padWithLeadingZeros(
+                        date.getSeconds(),
+                        2
+                    )}] [msg-embed]  Updated message embed. from: ${last_server_status} | to: ${status}`
+                );
+            }
+            last_server_status = status;
+            await statusMessage.edit({
+                content: "",
+                embeds: [
+                    new EmbedBuilder()
+                        .setTimestamp()
+                        .setTitle("Unreachable")
+                        .setThumbnail(config.icons.unreachable)
+                        .setColor(`#${config.colors.unreachable}`)
+                        .setDescription(
+                            [
+                                `The server is currently unreachable`,
+                                `The server might currently be starting/stopping`,
+                                `Last status: ${capitalize(last_server_status)}`,
+                                `IP Address: \`${config.smp.ip}:${config.smp.port}\``,
+                                `\n\`${err}\``,
+                            ].join("\n")
+                        ),
+                ],
+            });
+
+            UpdateStatus();
+        }
     }
 
     await sleep(config.status.updateInterval * 1000);
@@ -302,15 +319,8 @@ async function BuildEmbed(
 
 function UpdateStatus() {
     if (
-        status === "offline" ||
-        status === "preparing" ||
-        status === "loading" ||
-        status === "saving"
+        status === "online"
     ) {
-        client.user?.setPresence({
-            status: "dnd",
-        });
-    } else {
         client.user?.setPresence({
             status: "online",
             activities: [
@@ -321,6 +331,10 @@ function UpdateStatus() {
                     type: ActivityType.Playing,
                 },
             ],
+        });
+    } else {
+        client.user?.setPresence({
+            status: "dnd",
         });
     }
 }
