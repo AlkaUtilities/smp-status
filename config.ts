@@ -1,6 +1,8 @@
 export default {
     port: 8080,
 
+    debug: true,
+
     smp: {
         ip: "indihomeSMP.aternos.me",
         port: 36341,

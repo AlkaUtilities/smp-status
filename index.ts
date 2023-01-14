@@ -1,12 +1,20 @@
-import { Client, IntentsBitField, ChannelType, EmbedBuilder } from "discord.js";
+import {
+    Client,
+    IntentsBitField,
+    ChannelType,
+    EmbedBuilder,
+    ActivityType,
+} from "discord.js";
 import { status as ServerStatus } from "minecraft-server-util";
 import express from "express";
 import config from "./config";
 import {} from "./typings/enviroment";
 
 //! Disable in replit
-// import { config as loadenv } from "dotenv";
-// loadenv();
+import { config as loadenv } from "dotenv";
+loadenv();
+
+console.log(`[CONFIG] ip: ${config.smp.ip} | port: ${config.smp.port}`);
 
 const app = express();
 
@@ -88,14 +96,22 @@ async function UpdateMessage() {
                 version = res.version;
                 players = res.players;
                 const date = new Date();
-                console.log(
-                    `[${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}] [${config.smp.ip.replace(
-                        ".aternos.me",
-                        ""
-                    )}]    [status]  ${res.version.name} ${
-                        res.players.online
-                    }/${res.players.max}`
-                );
+                if (config.debug) {
+                    console.log(
+                        `[${padWithLeadingZeros(
+                            date.getHours(),
+                            2
+                        )}:${padWithLeadingZeros(
+                            date.getMinutes(),
+                            2
+                        )}:${padWithLeadingZeros(
+                            date.getSeconds(),
+                            2
+                        )}] [status]     ${res.version.name} ${
+                            res.players.online
+                        }/${res.players.max}`
+                    );
+                }
             }
         );
 
@@ -127,30 +143,58 @@ async function UpdateMessage() {
             status = "online";
         }
 
-        const date = new Date();
-        console.log(
-            `[${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}] [${config.smp.ip.replace(
-                ".aternos.me",
-                ""
-            )}]    [compare] last: ${last_server_status} | current: ${status} | ${
-                last_server_status !== status || status === "online"
-                    ? "true"
-                    : "false"
-            }`
-        );
+        if (config.debug) {
+            const date = new Date();
+            console.log(
+                `[${padWithLeadingZeros(
+                    date.getHours(),
+                    2
+                )}:${padWithLeadingZeros(
+                    date.getMinutes(),
+                    2
+                )}:${padWithLeadingZeros(
+                    date.getSeconds(),
+                    2
+                )}] [comparison] last: ${last_server_status} | current: ${status} | ${
+                    last_server_status !== status || status === "online"
+                        ? "true"
+                        : "false"
+                }`
+            );
+        }
         if (last_server_status !== status) {
+            const date = new Date();
+            if (config.debug) {
+                console.log(
+                    `[${padWithLeadingZeros(
+                        date.getHours(),
+                        2
+                    )}:${padWithLeadingZeros(
+                        date.getMinutes(),
+                        2
+                    )}:${padWithLeadingZeros(
+                        date.getSeconds(),
+                        2
+                    )}] [msg-embed]  Updated message embed. from: ${last_server_status} | to: ${status}`
+                );
+            }
             last_server_status = status;
             await statusMessage.edit({
                 content: "",
                 embeds: [await BuildEmbed(version, players)],
             });
+
+            await UpdateStatus();
         }
     } catch (err) {
         const date = new Date();
         console.log(
-            `[${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}] [${config.smp.ip.replace(
-                ".aternos.me",
-                ""
+            `[${padWithLeadingZeros(date.getHours(), 2)}:${padWithLeadingZeros(
+                date.getMinutes(),
+                2
+            )}:${padWithLeadingZeros(
+                date.getSeconds(),
+                2
             )}] [status-err] ${err}`
         );
         status = "unreachable";
@@ -251,6 +295,31 @@ async function BuildEmbed(
     return embed;
 }
 
+function UpdateStatus() {
+    if (
+        status === "offline" ||
+        status === "preparing" ||
+        status === "loading" ||
+        status === "saving"
+    ) {
+        client.user?.setPresence({
+            status: "dnd",
+        });
+    } else {
+        client.user?.setPresence({
+            status: "online",
+            activities: [
+                {
+                    name: config.smp.port
+                        ? `${config.smp.ip}:${config.smp.port}`
+                        : `${config.smp.ip}`,
+                    type: ActivityType.Playing,
+                },
+            ],
+        });
+    }
+}
+
 function capitalize(str: string) {
     return str[0]?.toUpperCase() + str?.substring(1);
 }
@@ -261,4 +330,8 @@ app.listen(config.port, () =>
 
 function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function padWithLeadingZeros(num: number, totalLength: number) {
+    return String(num).padStart(totalLength, "0");
 }
