@@ -1,13 +1,14 @@
 import { Client, IntentsBitField, ChannelType, EmbedBuilder } from "discord.js";
 import { status as ServerStatus } from "minecraft-server-util";
-// import { config as loadenv } from "dotenv";
 import express from "express";
 import config from "./config";
 import {} from "./typings/enviroment";
 
-const TOKEN = process.env["TOKEN"];
-
+//! Disable in replit
+// import { config as loadenv } from "dotenv";
 // loadenv();
+
+const TOKEN = process.env["TOKEN"];
 
 const app = express();
 
@@ -18,7 +19,11 @@ const client = new Client({
     ],
 });
 
-app.get("/", (req, res) => res.sendStatus(200));
+app.get("/", (req, res) => {
+    // returns 500 if client isn't logged in.
+    if (client.user === null) return res.sendStatus(500);
+    res.sendStatus(200);
+});
 
 client.once("ready", async (bot) => {
     console.log(`[CLIENT] Logged in as ${bot.user.tag}`);
