@@ -187,16 +187,21 @@ async function UpdateMessage() {
             await UpdateStatus();
         }
     } catch (err) {
-        const date = new Date();
-        console.log(
-            `[${padWithLeadingZeros(date.getHours(), 2)}:${padWithLeadingZeros(
-                date.getMinutes(),
-                2
-            )}:${padWithLeadingZeros(
-                date.getSeconds(),
-                2
-            )}] [status-err] ${err}`
-        );
+        if (config.debug) {
+            const date = new Date();
+            console.log(
+                `[${padWithLeadingZeros(
+                    date.getHours(),
+                    2
+                )}:${padWithLeadingZeros(
+                    date.getMinutes(),
+                    2
+                )}:${padWithLeadingZeros(
+                    date.getSeconds(),
+                    2
+                )}] [status-err] ${err}`
+            );
+        }
         status = "unreachable";
         await statusMessage.edit({
             content: "",
