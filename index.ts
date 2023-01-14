@@ -135,7 +135,7 @@ async function UpdateMessage() {
                     : "false"
             }`
         );
-        if (last_server_status !== status || status === "online") {
+        if (last_server_status !== status) {
             last_server_status = status;
             await statusMessage.edit({
                 content: "",
@@ -229,7 +229,7 @@ async function BuildEmbed(
                     `The server is currently online\n`,
                     `IP Address: \`${config.smp.ip}:${config.smp.port}\``,
                     `Version: ${version.name}`,
-                    `Players: ${players.online}/${players.max} online`,
+                    // `Players: ${players.online}/${players.max} online`,
                 ].join("\n")
             );
     } else if (status === "saving") {
