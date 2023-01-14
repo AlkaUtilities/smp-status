@@ -8,8 +8,6 @@ import {} from "./typings/enviroment";
 // import { config as loadenv } from "dotenv";
 // loadenv();
 
-const TOKEN = process.env["TOKEN"];
-
 const app = express();
 
 const client = new Client({
