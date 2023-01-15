@@ -8,7 +8,7 @@ import {
 import { status as ServerStatus } from "minecraft-server-util";
 import express from "express";
 import config from "./config";
-import { } from "./typings/enviroment";
+import {} from "./typings/enviroment";
 
 // import { config as loadenv } from "dotenv";
 // loadenv();
@@ -47,8 +47,16 @@ client.once("ready", async (bot) => {
 
 client.login(process.env["TOKEN"]);
 
-let status = "unreachable";
-let last_server_status = "unknown";
+let status: "unreachable" | "starting" | "online" | "stopping" | "offline" =
+    "unreachable";
+
+let last_server_status:
+    | "unreachable"
+    | "starting"
+    | "online"
+    | "stopping"
+    | "offline"
+    | "unknown" = "unknown";
 
 async function UpdateMessage() {
     const statusChannel = client.channels.cache.get(config.status.channel);
@@ -106,7 +114,8 @@ async function UpdateMessage() {
                         )}:${padWithLeadingZeros(
                             date.getSeconds(),
                             2
-                        )}] [status]     ${res.version.name} ${res.players.online
+                        )}] [status]     ${res.version.name} ${
+                            res.players.online
                         }/${res.players.max}`
                     );
                 }
@@ -136,7 +145,27 @@ async function UpdateMessage() {
         // }
 
         if (version.protocol === 46) {
-            status = version.name.slice(4).replace(/\./g, "").toLowerCase();
+            switch (version.name.slice(4).replace(/\./g, "").toLowerCase()) {
+                case "offline":
+                    status = "offline";
+                    break;
+
+                case "preparing":
+                    status = "starting";
+                    break;
+
+                case "loading":
+                    status = "starting";
+                    break;
+
+                case "stopping":
+                    status = "stopping";
+                    break;
+
+                case "saving":
+                    status = "stopping";
+                    break;
+            }
         } else if (version.protocol === 760) {
             status = "online";
         }
@@ -153,9 +182,10 @@ async function UpdateMessage() {
                 )}:${padWithLeadingZeros(
                     date.getSeconds(),
                     2
-                )}] [comparison] last: ${last_server_status} | current: ${status} | ${last_server_status !== status || status === "online"
-                    ? "true"
-                    : "false"
+                )}] [comparison] last: ${last_server_status} | current: ${status} | ${
+                    last_server_status !== status || status === "online"
+                        ? "true"
+                        : "false"
                 }`
             );
         }
@@ -184,7 +214,7 @@ async function UpdateMessage() {
             UpdateStatus();
         }
     } catch (err) {
-        status = "unreachable"
+        status = "unreachable";
         if (config.debug) {
             const date = new Date();
             console.log(
@@ -228,8 +258,9 @@ async function UpdateMessage() {
                         .setDescription(
                             [
                                 `The server is currently unreachable`,
-                                `The server might currently be starting/stopping`,
-                                `Last status: ${capitalize(last_server_status)}`,
+                                `Last status: ${capitalize(
+                                    last_server_status
+                                )}`,
                                 `IP Address: \`${config.smp.ip}:${config.smp.port}\``,
                                 `\n\`${err}\``,
                             ].join("\n")
@@ -266,22 +297,11 @@ async function BuildEmbed(
                     `IP Address: \`${config.smp.ip}:${config.smp.port}\``,
                 ].join("\n")
             );
-    } else if (status === "preparing") {
+    } else if (status === "starting") {
         embed
             .setTitle("Preparing")
             .setThumbnail(config.icons.preparing)
             .setColor(`#${config.colors.preparing}`)
-            .setDescription(
-                [
-                    `The server is currently starting\n`,
-                    `IP Address: \`${config.smp.ip}:${config.smp.port}\``,
-                ].join("\n")
-            );
-    } else if (status === "loading") {
-        embed
-            .setTitle("Loading")
-            .setThumbnail(config.icons.loading)
-            .setColor(`#${config.colors.loading}`)
             .setDescription(
                 [
                     `The server is currently starting\n`,
@@ -301,11 +321,11 @@ async function BuildEmbed(
                     // `Players: ${players.online}/${players.max} online`,
                 ].join("\n")
             );
-    } else if (status === "saving") {
+    } else if (status === "stopping") {
         embed
-            .setTitle("Saving")
-            .setThumbnail(config.icons.saving)
-            .setColor(`#${config.colors.saving}`)
+            .setTitle("Stopping")
+            .setThumbnail(config.icons.stopping)
+            .setColor(`#${config.colors.stopping}`)
             .setDescription(
                 [
                     `The server is currently stopping\n`,
@@ -318,23 +338,27 @@ async function BuildEmbed(
 }
 
 function UpdateStatus() {
-    if (
-        status === "online"
-    ) {
+    if (status === "online") {
         client.user?.setPresence({
             status: "online",
             activities: [
                 {
-                    name: config.smp.port
-                        ? `${config.smp.ip}:${config.smp.port}`
-                        : `${config.smp.ip}`,
-                    type: ActivityType.Playing,
+                    name: "Server online",
+                    url: "https://discord.gg/bwW8QUtWs9",
+                    type: ActivityType.Streaming,
                 },
             ],
         });
     } else {
         client.user?.setPresence({
             status: "dnd",
+            activities: [
+                {
+                    name: "Server offline",
+                    url: "https://discord.gg/bwW8QUtWs9",
+                    type: ActivityType.Streaming,
+                },
+            ],
         });
     }
 }
