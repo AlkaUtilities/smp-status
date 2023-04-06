@@ -1,51 +1,48 @@
+import { config as dotenv } from "dotenv";
+dotenv();
+
 import {
     Client,
     IntentsBitField,
+    Partials,
     ChannelType,
     EmbedBuilder,
     ActivityType,
+    Collection,
 } from "discord.js";
 import { status as ServerStatus } from "minecraft-server-util";
 import express from "express";
-import config from "./config";
-import {} from "./typings/enviroment";
 
-// import { config as loadenv } from "dotenv";
-// loadenv();
+import config from "./config";
+import { load_events } from "./handlers/event";
+
+import {} from "./typings/enviroment";
+import {} from "./typings/discord";
+
+const { GuildMessages, Guilds, GuildMembers } = IntentsBitField.Flags;
+const { User, Message, GuildMember, ThreadMember } = Partials;
 
 console.log(`[CONFIG] ip: ${config.smp.ip} | port: ${config.smp.port}`);
 
 const app = express();
 
 const client = new Client({
-    intents: [
-        IntentsBitField.Flags.GuildMessages,
-        IntentsBitField.Flags.Guilds,
-    ],
+    intents: [GuildMessages, Guilds, GuildMembers],
+    partials: [User, Message, GuildMember, ThreadMember],
 });
+
+// Collections (Discord.Collection)
+client.events = new Collection();
+client.commands = new Collection();
+client.subCommands = new Collection();
+
+load_events(client);
 
 app.get("/", (req, res) => {
     // returns 500 if client isn't logged in.
     if (client.user === null) return res.sendStatus(500);
     res.sendStatus(200);
 });
-
-client.once("ready", async (bot) => {
-    console.log(`[CLIENT] Logged in as ${bot.user.tag}`);
-
-    if (!config.smp.ip) {
-        console.warn("IP address is empty");
-        process.exit(0);
-    }
-    if (!config.status.channel) {
-        console.warn("Status channel is empty");
-        process.exit(0);
-    }
-
-    UpdateMessage();
-});
-
-client.login(process.env["TOKEN"]);
 
 let status: "unreachable" | "starting" | "online" | "stopping" | "offline" =
     "unreachable";
@@ -58,7 +55,7 @@ let last_server_status:
     | "offline"
     | "unknown" = "unknown";
 
-async function UpdateMessage() {
+export async function UpdateMessage() {
     const statusChannel = client.channels.cache.get(config.status.channel);
 
     if (!statusChannel) {
@@ -343,9 +340,9 @@ function UpdateStatus() {
             status: "online",
             activities: [
                 {
-                    name: "Server online",
+                    name: `${config.smp.ip} | Online`,
                     url: "https://discord.gg/bwW8QUtWs9",
-                    type: ActivityType.Streaming,
+                    type: ActivityType.Playing,
                 },
             ],
         });
@@ -354,9 +351,9 @@ function UpdateStatus() {
             status: "dnd",
             activities: [
                 {
-                    name: "Server offline",
+                    name: `${config.smp.ip} | Offline`,
                     url: "https://discord.gg/bwW8QUtWs9",
-                    type: ActivityType.Streaming,
+                    type: ActivityType.Playing,
                 },
             ],
         });
@@ -367,10 +364,6 @@ function capitalize(str: string) {
     return str[0]?.toUpperCase() + str?.substring(1);
 }
 
-app.listen(config.port, () =>
-    console.log(`[EXPRESS] Listening on port ${config.port}`)
-);
-
 function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -378,3 +371,9 @@ function sleep(ms: number) {
 function padWithLeadingZeros(num: number, totalLength: number) {
     return String(num).padStart(totalLength, "0");
 }
+
+app.listen(config.port, () =>
+    console.log(`[EXPRESS] Listening on port ${config.port}`)
+);
+
+client.login(process.env.TOKEN);

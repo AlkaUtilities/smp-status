@@ -1,10 +1,13 @@
 export default {
+    devGuildId: "998487239803813898",
+    developersId: ["529424782438170679", "664025740890734593"],
+
     port: 8080,
 
     debug: true,
 
     smp: {
-        ip: "indihomeSMP.aternos.me",
+        ip: "LowEndSMP.aternos.me",
         port: 36341,
     },
 
@@ -41,5 +44,10 @@ export default {
         loading: "a4a4a4",
         stopping: "a4a4a4",
         saving: "a4a4a4",
+    },
+
+    cli: {
+        status_ok: "🟩 OK",
+        status_bad: "🟥 BAD",
     },
 };
