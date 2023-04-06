@@ -131,6 +131,7 @@ dist
 
 # alden
 *.txt
+ignore/
 
 # alden (from replit)
 .build/
