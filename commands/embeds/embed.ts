@@ -71,8 +71,9 @@ module.exports = {
                     .setTitle("Info")
                     .setDescription(
                         [
-                            `Server IP: ${config.smp.ip}`,
-                            "Server version: Fabric 1.19.3",
+                            `Server IP: ${config.smp.ip}:${config.smp.port}`,
+                            "Server Version: Fabric 1.19.3",
+                            'Click [**here**](https://me.needs.rest/mods.zip) to get required mods (Mods with "Client" tag in mod menu is not needed)',
                         ].join("\n\n")
                     )
                     .setColor("#dc143c");

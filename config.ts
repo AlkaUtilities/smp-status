@@ -8,7 +8,7 @@ export default {
 
     smp: {
         ip: "LowEndSMP.aternos.me",
-        port: 36341,
+        port: 53537,
     },
 
     status: {
