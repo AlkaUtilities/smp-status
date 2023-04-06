@@ -22,6 +22,6 @@ module.exports = {
             process.exit(0);
         }
 
-        // UpdateMessage();
+        UpdateMessage();
     },
 };

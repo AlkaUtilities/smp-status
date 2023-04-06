@@ -12,7 +12,7 @@ export default {
     },
 
     status: {
-        channel: "1061088148286877748", // channel id
+        channel: "1093538615520399420", // channel id
         updateInterval: 5, // in seconds
     },
 
